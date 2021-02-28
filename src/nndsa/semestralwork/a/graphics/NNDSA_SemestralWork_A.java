@@ -12,31 +12,23 @@ import nndsa.semestralwork.a.structures.Graph;
  * @author milan.horak
  */
 public class NNDSA_SemestralWork_A extends Application {
-    
-    private final Graph<String, Integer> graph = new Graph<>();
-    
+
+    private final Graph<String, Integer> graph = new Graph();
+
     @Override
     public void start(Stage stage) throws Exception {
         graph.addVertex("a");
-        graph.addVertex("b");       
-        graph.addVertex("c");
-        
-        graph.addEdge("a", "b", 200);
-        
         graph.addVertex("b");
-        
-        System.out.println(graph.size());
-        //System.out.println(graph.findEdge("b"));
-        
-        System.out.println(graph.findEdge("b", "c"));
-        System.out.println(graph.removeEdge("a", "b"));
-        //System.out.println("A:" + graph.removeVertex("a"));
-        //System.out.println("B:" + graph.removeVertex("b"));
-        //System.out.println("C:" + graph.removeVertex("c"));
-        //System.out.println(graph.size());
-        
-        Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));     
-        Scene scene = new Scene(root); 
+        graph.addVertex("c");
+        graph.addEdge("a", "b", 200);
+        graph.addEdge("a", "c", 300);
+
+        System.out.println(graph);
+        graph.removeVertex("b");
+        System.out.println(graph);
+
+        Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
+        Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
     }
