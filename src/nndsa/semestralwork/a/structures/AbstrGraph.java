@@ -11,19 +11,18 @@ import java.util.Set;
  * @param <V> vertex
  * @param <E> edge
  */
+
 public class AbstrGraph<K, V, E> implements IAbstrGraph<K, V, E> {
 
-    private final Hashtable<K, Hashtable<K, E>> edges = new Hashtable();
-    private final Hashtable<K, V> vertices = new Hashtable();
+    private final Hashtable<K, Vertex> vertices = new Hashtable();
 
     @Override
     public String toString() {
-        return "Graph: (" + size() + ") " + edges;
+        return "Graph: (" + size() + ") " + vertices;
     }
 
     @Override
     public void clear() {
-        edges.clear();
         vertices.clear();
     }
 
@@ -34,10 +33,10 @@ public class AbstrGraph<K, V, E> implements IAbstrGraph<K, V, E> {
 
     @Override
     public int size() {
-        Set<K> keys = edges.keySet();
-        int result = keys.size();
-        for (K key : keys) {
-            result += edges.get(key).size();
+        Set<K> keys = vertices.keySet();
+        int result = vertices.size();
+        for (K vertexKey : keys) {
+            result += vertices.get(vertexKey).edges.size();
         }
         return result;
     }
@@ -47,22 +46,23 @@ public class AbstrGraph<K, V, E> implements IAbstrGraph<K, V, E> {
         if (key == null || vertex == null) {
             throw new NullPointerException();
         }
-        if (!edges.containsKey(key)) {
-            edges.put(key, new Hashtable());
-            vertices.put(key, vertex);
+        if (!vertices.containsKey(key)) {
+            vertices.put(key, new Vertex(vertex));
         }
     }
 
     @Override
-    public void addEdge(K firstVertex, K secondVertex, E edge) throws NullPointerException {
-        if (firstVertex == null || secondVertex == null || edge == null) {
+    public void addEdge(K keyOne, K keyTwo, E edge) throws NullPointerException {
+        if (keyOne == null || keyTwo == null || edge == null) {
             throw new NullPointerException();
         }
-        if (!edges.containsKey(firstVertex) && !edges.containsKey(secondVertex)) {
+        if (!vertices.containsKey(keyOne) && !vertices.containsKey(keyTwo)) {
             return;
         }
-        edges.get(firstVertex).put(secondVertex, edge);
-        edges.get(secondVertex).put(firstVertex, edge);
+        Vertex start = vertices.get(keyOne);
+        Vertex target = vertices.get(keyTwo);
+        start.edges.add(new Edge(start, target, edge));
+        target.edges.add(new Edge(target, start, edge));
     }
 
     @Override
@@ -73,12 +73,9 @@ public class AbstrGraph<K, V, E> implements IAbstrGraph<K, V, E> {
         if (!vertices.containsKey(key)) {
             return null;
         }
-        Set<K> keys = edges.keySet();
-        for (K otherKey : keys) {
-            removeEdge(key, otherKey);
-        }
-        edges.remove(key);
-        return vertices.remove(key);
+        Set<K> keys = vertices.keySet();
+        keys.forEach((otherKey) -> removeEdge(key, otherKey));
+        return vertices.remove(key).data;
     }
 
     @Override
@@ -86,8 +83,27 @@ public class AbstrGraph<K, V, E> implements IAbstrGraph<K, V, E> {
         if (keyOne == null || keyTwo == null) {
             throw new NullPointerException();
         }
-        edges.get(keyOne).remove(keyTwo);
-        return edges.get(keyTwo).remove(keyOne);
+        if (findEdge(keyOne, keyTwo) == null) {
+            return null;
+        }
+        Vertex start = vertices.get(keyOne);
+        Vertex target = vertices.get(keyTwo);
+        LinkedList<Edge> startEdges = start.edges;
+        LinkedList<Edge> targetEdges = target.edges;
+
+        E result = findEdge(keyOne, keyTwo);
+
+        for (Edge edge : startEdges) {
+            if (edge.target.equals(target)) {
+                vertices.get(keyOne).edges.remove(edge);
+            }
+        }
+        for (Edge edge : targetEdges) {
+            if (edge.target.equals(start)) {
+                vertices.get(keyOne).edges.remove(edge);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -95,7 +111,10 @@ public class AbstrGraph<K, V, E> implements IAbstrGraph<K, V, E> {
         if (key == null) {
             throw new NullPointerException();
         }
-        return vertices.get(key);
+        if (!vertices.containsKey(key)) {
+            return null;
+        }
+        return vertices.get(key).data;
     }
 
     @Override
@@ -103,10 +122,14 @@ public class AbstrGraph<K, V, E> implements IAbstrGraph<K, V, E> {
         if (keyOne == null || keyTwo == null) {
             throw new NullPointerException();
         }
-        if (!edges.containsKey(keyOne)) {
-            return null;
+        LinkedList<Edge> edges = vertices.get(keyOne).edges;
+        Vertex target = vertices.get(keyTwo);
+        for (Edge edge : edges) {
+            if (edge.target.equals(target)) {
+                return edge.data;
+            }
         }
-        return edges.get(keyOne).get(keyTwo);
+        return null;
     }
 
     @Override
@@ -114,10 +137,10 @@ public class AbstrGraph<K, V, E> implements IAbstrGraph<K, V, E> {
         if (key == null) {
             throw new NullPointerException();
         }
-        Set<K> keys = edges.get(key).keySet();
+        LinkedList<Edge> edges = vertices.get(key).edges;
         LinkedList<V> result = new LinkedList<>();
-        for (K edgeKey : keys) {
-            result.add(vertices.get(edgeKey));
+        for (Edge edge : edges) {
+            result.add(edge.target.data);
         }
         return result;
     }
@@ -127,11 +150,43 @@ public class AbstrGraph<K, V, E> implements IAbstrGraph<K, V, E> {
         if (key == null) {
             throw new NullPointerException();
         }
-        Set<K> keys = edges.get(key).keySet();
-        LinkedList<E> result = new LinkedList<>();
-        for (K edgeKey : keys) {
-            result.add(edges.get(key).get(edgeKey));
+        LinkedList<E> result = new LinkedList();
+        for (Edge edge : vertices.get(key).edges) {
+            result.add(edge.data);
         }
         return result;
+    }
+
+    private class Vertex {
+
+        private V data;
+        private LinkedList<Edge> edges = new LinkedList();
+
+        public Vertex(V vertex) {
+            this.data = vertex;
+        }
+
+        @Override
+        public String toString() {
+            return data.toString();
+        }
+    }
+
+    private class Edge {
+
+        private Vertex start;
+        private Vertex target;
+        private E data;
+
+        public Edge(Vertex start, Vertex target, E data) {
+            this.start = start;
+            this.target = target;
+            this.data = data;
+        }
+
+        @Override
+        public String toString() {
+            return data.toString();
+        }
     }
 }
