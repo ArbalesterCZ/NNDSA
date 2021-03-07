@@ -1,5 +1,6 @@
 package nndsa.semestralwork.a.structures;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import org.junit.Before;
 import org.junit.Test;
@@ -97,5 +98,17 @@ public class AbstrGraphTest {
         shouldBe.add(200);
         LinkedList<Integer> result = graph.findIncidentElements("a");
         assertEquals(shouldBe, result);
+    }
+    
+    @Test
+    public void testIterator(){
+        Iterator<Integer> iterator = graph.iterator();
+        assertTrue(iterator.hasNext());
+        
+        assertTrue(iterator.next() == 2);
+        assertTrue(iterator.next() == 1);
+        assertTrue(iterator.next() == 3); 
+        
+        assertFalse(iterator.hasNext());
     }
 }

@@ -1,31 +1,35 @@
 package nndsa.semestralwork.a.structures;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  *
  * @author milan.horak
  */
-public class Path {
+public class Path implements Serializable {
 
-    private final int length;
-    private final Town start;
-    private final Town end;
+    public int length;
+    public Town start;
+    public Town target;
 
-    public Path(int length, Town start, Town end) {
+    public Path(int length, Town start, Town target) {
         this.length = length;
         this.start = start;
-        this.end = end;
+        this.target = target;
     }
 
     @Override
     public String toString() {
-        return String.format("Length: [%d] From: [%s] To: [%s]", length, start, end);
+        return String.format("Length: [%d] From: [%s] To: [%s]", length, start, target);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(start, end);
+        return Objects.hash(start, target);
     }
 
     @Override
@@ -37,10 +41,18 @@ public class Path {
             return false;
         }
         final Path other = (Path) obj;
-        return Objects.equals(start, other.start) && Objects.equals(end, other.end);
+        return Objects.equals(start, other.start) && Objects.equals(target, other.target);
     }
 
-    public int getLength() {
-        return length;
+    private void writeObject(ObjectOutputStream aOutputStream) throws IOException {
+        aOutputStream.writeInt(length);
+        aOutputStream.writeObject(start);
+        aOutputStream.writeObject(target);
+    }
+
+    private void readObject(ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
+        length = aInputStream.readInt();
+        start = (Town) aInputStream.readObject();
+        target = (Town) aInputStream.readObject();
     }
 }

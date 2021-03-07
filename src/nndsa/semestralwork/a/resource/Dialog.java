@@ -42,7 +42,7 @@ public final class Dialog {
         FileChooser fileChooser = new FileChooser();
 
         fileChooser.setTitle(dialogType.toString());
-        for (Filter innerFilter : filter) {   
+        for (Filter innerFilter : filter) {
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(innerFilter.description, Arrays.asList(innerFilter.extensions)));
         }
 
@@ -112,6 +112,12 @@ public final class Dialog {
         public Filter(String description, String[] extensions) {
             this.description = description;
             this.extensions = extensions;
-        }     
+        }
+
+        public Filter(String description, String extension) {
+            this.description = description;
+            this.extensions = new String[1];
+            this.extensions[0] = extension;
+        }
     }
 }

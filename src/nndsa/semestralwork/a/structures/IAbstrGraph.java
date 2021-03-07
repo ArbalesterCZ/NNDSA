@@ -6,13 +6,15 @@ import java.util.LinkedList;
  *
  * @author milan.horak
  */
-interface IAbstrGraph<K, V, E> {
+public interface IAbstrGraph<K, V, E> extends Iterable<V>{
 
     public void clear();
 
     public boolean isEmpty();
 
     public int size();
+    
+    public int verticlesCount();
 
     public void addVertex(K key, V vertex) throws NullPointerException;
 

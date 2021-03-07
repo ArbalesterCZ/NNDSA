@@ -47,6 +47,10 @@ public class Point {
         final Point other = (Point) obj;
         return x == other.x && y == other.y;
     }
+    
+    public double distance(Point second){
+        return Math.sqrt(Math.pow(x - second.x, 2) + Math.pow(y - second.y, 2));
+    }
 
     public Point add(Point addend) {
         return new Point(x + addend.x, y + addend.y);
