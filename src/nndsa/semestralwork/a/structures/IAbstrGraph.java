@@ -5,6 +5,9 @@ import java.util.LinkedList;
 /**
  *
  * @author milan.horak
+ * @param <K> key
+ * @param <V> vertex
+ * @param <E> edge
  */
 public interface IAbstrGraph<K, V, E> extends Iterable<V>{
 

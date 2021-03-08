@@ -20,6 +20,11 @@ public class Town implements Serializable {
         this.coordinate = coordinate;
     }
 
+    public Town(Town town) {
+        name = town.name;
+        coordinate = town.coordinate;
+    }
+
     @Override
     public String toString() {
         return String.format("City: [%s] Coordinate: %s", name, coordinate);

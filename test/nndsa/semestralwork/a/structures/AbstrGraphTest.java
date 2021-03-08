@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
  */
 public class AbstrGraphTest {
 
-    AbstrGraph<String, Integer, Integer> graph;
+    IAbstrGraph<String, Integer, Integer> graph;
 
     @Before
     public void setUp() {

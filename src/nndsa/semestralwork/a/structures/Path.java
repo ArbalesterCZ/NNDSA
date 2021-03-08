@@ -16,8 +16,8 @@ public class Path implements Serializable {
     public Town start;
     public Town target;
 
-    public Path(int length, Town start, Town target) {
-        this.length = length;
+    public Path(Town start, Town target) {
+        length = (int) start.getCoordinate().distance(target.getCoordinate());
         this.start = start;
         this.target = target;
     }

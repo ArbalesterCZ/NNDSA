@@ -103,11 +103,13 @@ public class AbstrGraph2<K, V, E> implements IAbstrGraph<K, V, E> {
         for (Edge edge : startEdges) {
             if (edge.target.equals(target)) {
                 vertices.get(keyOne).edges.remove(edge);
+                break;
             }
         }
         for (Edge edge : targetEdges) {
             if (edge.target.equals(start)) {
-                vertices.get(keyOne).edges.remove(edge);
+                vertices.get(keyTwo).edges.remove(edge);
+                break;
             }
         }
         return result;
