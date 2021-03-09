@@ -46,10 +46,6 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Edit">
             <items>
-              <MenuItem mnemonicParsing="false" onAction="#OnAdd" text="Add">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="A" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
-                     </accelerator></MenuItem>
                   <MenuItem mnemonicParsing="false" onAction="#OnDelete" text="Delete">
                      <accelerator>
                         <KeyCodeCombination alt="UP" code="D" control="UP" meta="UP" shift="DOWN" shortcut="UP" />
@@ -70,7 +66,7 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Help">
             <items>
-              <MenuItem mnemonicParsing="false" onAction="#OnAbout" text="About" />
+              <MenuItem mnemonicParsing="false" onAction="#OnAbout" text="Information" />
             </items>
           </Menu>
         </menus>

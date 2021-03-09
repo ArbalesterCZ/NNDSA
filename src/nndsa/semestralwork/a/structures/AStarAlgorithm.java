@@ -3,11 +3,12 @@ package nndsa.semestralwork.a.structures;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 
 public class AStarAlgorithm {
 
-    private final LinkedList<Node> STATE_LIST_SAVE = new LinkedList();
-    private final LinkedList<Node> STATE_LIST_FIFO = new LinkedList();
+    private final List<Node> STATE_LIST_SAVE = new LinkedList();
+    private final PriorityQueue<Node> STATE_LIST_FIFO = new PriorityQueue();
 
     private Town target;
 
@@ -15,19 +16,6 @@ public class AStarAlgorithm {
 
     public AStarAlgorithm(IAbstrGraph graph) {
         this.graph = graph;
-    }
-
-    private int FindMinCostNodeIndex() {
-        int minCostIndex = -1;
-        int cost = 10000000;
-        for (int i = 0; i < STATE_LIST_FIFO.size(); i++) {
-            int actualCost = STATE_LIST_FIFO.get(i).getTotalCost();
-            if (actualCost < cost) {
-                cost = actualCost;
-                minCostIndex = i;
-            }
-        }
-        return minCostIndex;
     }
 
     public List<Node> findSolution(Town start, Town target) {
@@ -43,7 +31,6 @@ public class AStarAlgorithm {
         final LinkedList<Node> SOLUTION_LIST = new LinkedList();
 
         while (!STATE_LIST_FIFO.isEmpty()) {
-            Collections.sort(STATE_LIST_FIFO, (Node node1, Node node2) -> node1.getTotalCost() - node2.getTotalCost());
             Node expandedNode = STATE_LIST_FIFO.remove();
             STATE_LIST_SAVE.add(expandedNode);
 
@@ -78,7 +65,16 @@ public class AStarAlgorithm {
         }
     }
 
-    private static boolean isStateSaved(Town town, Path action, LinkedList<Node> list) {
+    private boolean isStateSaved(Town town, Path action, PriorityQueue<Node> states) {
+        for (Node node : states) {
+            if (node.state.equals(town) && action.equals(node.action)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isStateSaved(Town town, Path action, List<Node> list) {
         for (Node node : list) {
             if (node.state.equals(town) && action.equals(node.action)) {
                 return true;

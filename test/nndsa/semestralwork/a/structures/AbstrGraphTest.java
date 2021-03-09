@@ -17,7 +17,7 @@ public class AbstrGraphTest {
 
     @Before
     public void setUp() {
-        graph = new AbstrGraph();
+        graph = new AbstrGraphHashTable();
         graph.addVertex("a", 1);
         graph.addVertex("b", 2);
         graph.addVertex("c", 3);
@@ -27,15 +27,12 @@ public class AbstrGraphTest {
 
     @Test
     public void testClear() {
-        assertFalse(graph.isEmpty());
         graph.clear();
         assertTrue(graph.isEmpty());
     }
 
     @Test
     public void testIsEmpty() {
-        AbstrGraph<String, Integer, Integer> emptyGraph = new AbstrGraph();
-        assertTrue(emptyGraph.isEmpty());
         assertFalse(graph.isEmpty());
     }
 
@@ -56,11 +53,12 @@ public class AbstrGraphTest {
         assertNull(graph.findEdge("b", "c"));
         graph.addEdge("b", "c", 300);
         assertNotNull(graph.findEdge("b", "c"));
+        assertNotNull(graph.findEdge("c", "b"));
     }
 
     @Test
     public void testRemoveVertex() {
-        assertTrue(graph.removeVertex("a") == 1);
+        assertNotNull(graph.removeVertex("a"));
         assertNull(graph.removeVertex("a"));
     }
 
@@ -68,6 +66,7 @@ public class AbstrGraphTest {
     public void testRemoveEdge() {
         assertNotNull(graph.removeEdge("a", "b"));
         assertNull(graph.removeEdge("a", "b"));
+        assertNull(graph.removeEdge("b", "a"));
     }
 
     @Test
@@ -99,16 +98,16 @@ public class AbstrGraphTest {
         LinkedList<Integer> result = graph.findIncidentElements("a");
         assertEquals(shouldBe, result);
     }
-    
+
     @Test
-    public void testIterator(){
+    public void testIterator() {
         Iterator<Integer> iterator = graph.iterator();
         assertTrue(iterator.hasNext());
-        
+
         assertTrue(iterator.next() == 2);
         assertTrue(iterator.next() == 1);
-        assertTrue(iterator.next() == 3); 
-        
+        assertTrue(iterator.next() == 3);
+
         assertFalse(iterator.hasNext());
     }
 }

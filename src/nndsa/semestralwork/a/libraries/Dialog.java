@@ -1,4 +1,4 @@
-package nndsa.semestralwork.a.resource;
+package nndsa.semestralwork.a.libraries;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

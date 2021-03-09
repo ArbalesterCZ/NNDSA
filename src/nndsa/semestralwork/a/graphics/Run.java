@@ -7,7 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
-import nndsa.semestralwork.a.resource.Dialog;
+import nndsa.semestralwork.a.libraries.Dialog;
 
 /**
  *

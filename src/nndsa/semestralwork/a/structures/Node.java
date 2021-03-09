@@ -6,7 +6,7 @@ import java.util.Objects;
  *
  * @author milan.horak
  */
-public class Node {
+public class Node implements Comparable<Node> {
 
     private static int idCounter = 0;
 
@@ -27,14 +27,12 @@ public class Node {
 
     @Override
     public String toString() {
-        return state + " PathCost=" + pathCost + "PathEval=" + pathEval;
+        return state + " PathCost: [" + pathCost + "] PathEval: [" + pathEval + "]";
     }
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 79 * hash + Objects.hashCode(this.state);
-        return hash;
+        return Objects.hash(state, action);
     }
 
     @Override
@@ -46,7 +44,7 @@ public class Node {
             return false;
         }
         final Node other = (Node) obj;
-        return state.equals(other.state);
+        return state.equals(other.state) && action.equals(other.action);
     }
 
     public boolean hasParent() {
@@ -57,31 +55,12 @@ public class Node {
         idCounter = 0;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public Town getState() {
-        return state;
-    }
-
-    public Node getParent() {
-        return parent;
-    }
-
-    public Path getAction() {
-        return action;
-    }
-
-    public int getPathCost() {
-        return pathCost;
-    }
-
-    public int getPathEval() {
-        return pathEval;
-    }
-
     public int getTotalCost() {
         return pathCost + pathEval;
+    }
+
+    @Override
+    public int compareTo(Node other) {
+        return getTotalCost() - other.getTotalCost();
     }
 }

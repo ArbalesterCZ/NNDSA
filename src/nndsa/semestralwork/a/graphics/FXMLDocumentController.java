@@ -18,14 +18,14 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import nndsa.semestralwork.a.resource.Dialog;
-import nndsa.semestralwork.a.resource.Dialog.Filter;
+import nndsa.semestralwork.a.libraries.Dialog;
+import nndsa.semestralwork.a.libraries.Dialog.Filter;
 import nndsa.semestralwork.a.structures.AStarAlgorithm;
-import nndsa.semestralwork.a.structures.AbstrGraph;
+import nndsa.semestralwork.a.structures.AbstrGraphHashTable;
+import nndsa.semestralwork.a.structures.AbstrGraphList;
 import nndsa.semestralwork.a.structures.IAbstrGraph;
 import nndsa.semestralwork.a.structures.Node;
 import nndsa.semestralwork.a.structures.Path;
@@ -40,9 +40,9 @@ public class FXMLDocumentController implements Initializable {
 
     private GraphicsContext gc;
 
-    private IAbstrGraph<Integer, Town, Path> graph = new AbstrGraph();
+    private IAbstrGraph<Integer, Town, Path> graph = new AbstrGraphList();
 
-    final static ImageView MAP = new ImageView(new Image("/nndsa/semestralwork/a/resource/Map.png"));
+    final static Image MAP = new Image("/nndsa/semestralwork/a/resource/Map.png");
 
     private Town focusTown;
     private Town focusTownSecond;
@@ -68,6 +68,13 @@ public class FXMLDocumentController implements Initializable {
     @FXML
     private CheckMenuItem CheckTownMode;
 
+    private void clearScene() {
+        graph.clear();
+        bestPath.clear();
+        startTown = null;
+        targetTown = null;
+    }
+
     private void drawTown(Town town) {
         Point coor = new Point(town.getX(), town.getY());
         gc.fillOval(coor.x - SHIFT, coor.y - SHIFT, TOWN_SIZE, TOWN_SIZE);
@@ -75,7 +82,7 @@ public class FXMLDocumentController implements Initializable {
     }
 
     private void render() {
-        gc.drawImage(MAP.getImage(), 0, 0);
+        gc.drawImage(MAP, 0, 0);
         gc.setFill(Color.GREEN);
         gc.setStroke(Color.BLACK);
         for (Town town : graph) {
@@ -83,6 +90,13 @@ public class FXMLDocumentController implements Initializable {
                 gc.strokeLine(path.start.getX(), path.start.getY(), path.target.getX(), path.target.getY());
             }
         }
+        gc.setStroke(Color.YELLOW);
+        for (int i = 0; i < bestPath.size() - 1; i++) {
+            gc.strokeLine(
+                    bestPath.get(i).state.getX(), bestPath.get(i).state.getY(),
+                    bestPath.get(i + 1).state.getX(), bestPath.get(i + 1).state.getY());
+        }
+        gc.setStroke(Color.BLACK);
         for (Town town : graph) {
             drawTown(town);
         }
@@ -90,13 +104,14 @@ public class FXMLDocumentController implements Initializable {
             gc.setFill(Color.RED);
             drawTown(focusTown);
         }
-        for (int i = 0; i < bestPath.size() - 1; i++) {
-            gc.setStroke(Color.YELLOW);
-            gc.strokeLine(
-                    bestPath.get(i).state.getX(), bestPath.get(i).state.getY(),
-                    bestPath.get(i + 1).state.getX(), bestPath.get(i + 1).state.getY());
+        if (startTown != null) {
+            gc.setFill(Color.AQUAMARINE);
+            drawTown(startTown);
         }
-        gc.setStroke(Color.BLACK);
+        if (targetTown != null) {
+            gc.setFill(Color.BISQUE);
+            drawTown(targetTown);
+        }
     }
 
     private void addPath(Path path) {
@@ -108,11 +123,6 @@ public class FXMLDocumentController implements Initializable {
         gc = canvas.getGraphicsContext2D();
         filters[0] = new Filter("Binary File", "*.bin");
         render();
-    }
-
-    @FXML
-    private void OnAdd(ActionEvent event) {
-        System.out.println("OnAdd");
     }
 
     @FXML
@@ -137,8 +147,7 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private void OnClear(ActionEvent event) {
-        graph.clear();
-        bestPath.clear();
+        clearScene();
         render();
     }
 
@@ -165,11 +174,8 @@ public class FXMLDocumentController implements Initializable {
                 return;
             }
         }
-        if (markedTown != null) {
-            gc.setFill(Color.GREEN);
-            drawTown(markedTown);
-            markedTown = null;
-        }
+        markedTown = null;
+        render();
     }
 
     @FXML
@@ -272,19 +278,21 @@ public class FXMLDocumentController implements Initializable {
     private void OnClicked(MouseEvent event) {
         if (CheckTownMode.isSelected()) {
             if (event.getButton() == MouseButton.MIDDLE) {
-                Town town = new Town("Town Name" + index++, new Point((int) event.getX(), (int) event.getY()));
+                Town town = new Town("Town_" + (++index), new Point((int) event.getX(), (int) event.getY()));
                 graph.addVertex(town.hashCode(), town);
                 render();
             }
         }
-        if (event.getButton() == MouseButton.PRIMARY) {
+        if (event.getButton() == MouseButton.PRIMARY && event.isAltDown()) {
             if (markedTown != null) {
                 startTown = markedTown;
+                render();
             }
         }
-        if (event.getButton() == MouseButton.SECONDARY) {
+        if (event.getButton() == MouseButton.SECONDARY && event.isAltDown()) {
             if (markedTown != null) {
                 targetTown = markedTown;
+                render();
             }
         }
     }
@@ -326,7 +334,7 @@ public class FXMLDocumentController implements Initializable {
             }
             FileInputStream fileInputStream = new FileInputStream(file);
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-            graph = new AbstrGraph<Integer, Town, Path>();
+            clearScene();
             index = objectInputStream.readInt();
             int verticlesSize = objectInputStream.readInt();
             for (int i = 0; i < verticlesSize; i++) {
@@ -348,6 +356,10 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private void OnRun(ActionEvent event) {
+        if (startTown == null || targetTown == null) {
+            Dialog.show(Run.STAGE, Alert.AlertType.INFORMATION, "First select start and target town");
+            return;
+        }
         AStarAlgorithm AStar = new AStarAlgorithm(graph);
         List<Node> list = AStar.findSolution(startTown, targetTown);
         if (list == null) {
