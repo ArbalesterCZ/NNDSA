@@ -66,6 +66,9 @@ public class AbstrGraphHashTable<K, V, E> implements IAbstrGraph<K, V, E> {
         if (!vertices.containsKey(keyOne) && !vertices.containsKey(keyTwo)) {
             return;
         }
+        if (findEdge(keyOne, keyTwo) != null) {
+            return;
+        }
         vertices.get(keyOne).edges.put(keyTwo, edge);
         vertices.get(keyTwo).edges.put(keyOne, edge);
     }

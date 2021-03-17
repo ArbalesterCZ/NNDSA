@@ -13,6 +13,11 @@ import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.print.PageLayout;
+import javafx.print.PageOrientation;
+import javafx.print.Paper;
+import javafx.print.Printer;
+import javafx.print.PrinterJob;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
@@ -21,6 +26,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
+import javafx.scene.transform.Scale;
 import nndsa.semestralwork.a.libraries.Dialog;
 import nndsa.semestralwork.a.libraries.Dialog.Filter;
 import nndsa.semestralwork.a.structures.AStarAlgorithm;
@@ -38,11 +44,10 @@ import nndsa.semestralwork.a.structures.Town;
  */
 public class FXMLDocumentController implements Initializable {
 
+    private final static Image MAP = new Image("/nndsa/semestralwork/a/resource/Map.png");
+    private final IAbstrGraph<Integer, Town, Path> graph = new AbstrGraphHashTable();
+
     private GraphicsContext gc;
-
-    private IAbstrGraph<Integer, Town, Path> graph = new AbstrGraphList();
-
-    final static Image MAP = new Image("/nndsa/semestralwork/a/resource/Map.png");
 
     private Town focusTown;
     private Town focusTownSecond;
@@ -60,6 +65,8 @@ public class FXMLDocumentController implements Initializable {
 
     private Town startTown;
     private Town targetTown;
+    
+    private Color backgroundColor = Color.GRAY;
 
     private int index = 0;
 
@@ -67,6 +74,12 @@ public class FXMLDocumentController implements Initializable {
     private Canvas canvas;
     @FXML
     private CheckMenuItem CheckTownMode;
+    @FXML
+    private CheckMenuItem background;
+    @FXML
+    private CheckMenuItem towns;
+    @FXML
+    private CheckMenuItem paths;
 
     private void clearScene() {
         graph.clear();
@@ -75,42 +88,53 @@ public class FXMLDocumentController implements Initializable {
         targetTown = null;
     }
 
-    private void drawTown(Town town) {
-        Point coor = new Point(town.getX(), town.getY());
-        gc.fillOval(coor.x - SHIFT, coor.y - SHIFT, TOWN_SIZE, TOWN_SIZE);
-        gc.strokeOval(coor.x - SHIFT, coor.y - SHIFT, TOWN_SIZE, TOWN_SIZE);
+    private void drawTown(Town town, GraphicsContext gc) {
+        int x = town.getX() - SHIFT;
+        int y = town.getY() - SHIFT;
+        gc.fillOval(x, y, TOWN_SIZE, TOWN_SIZE);
+        gc.strokeOval(x, y, TOWN_SIZE, TOWN_SIZE);
     }
 
-    private void render() {
-        gc.drawImage(MAP, 0, 0);
+    private void render(GraphicsContext gc) {
+        if (background.isSelected()) {
+            gc.drawImage(MAP, 0, 0);
+        } else {
+            gc.setFill(backgroundColor);
+            gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        }
         gc.setFill(Color.GREEN);
         gc.setStroke(Color.BLACK);
-        for (Town town : graph) {
-            for (Path path : graph.findIncidentElements(town.hashCode())) {
-                gc.strokeLine(path.start.getX(), path.start.getY(), path.target.getX(), path.target.getY());
+        if (paths.isSelected()) {
+            for (Town town : graph) {
+                for (Path path : graph.findIncidentElements(town.hashCode())) {
+                    gc.strokeLine(path.start.getX(), path.start.getY(), path.target.getX(), path.target.getY());
+                }
+            }
+
+            gc.setStroke(Color.RED);
+            for (int i = 0; i < bestPath.size() - 1; i++) {
+                gc.strokeLine(
+                        bestPath.get(i).state.getX(), bestPath.get(i).state.getY(),
+                        bestPath.get(i + 1).state.getX(), bestPath.get(i + 1).state.getY());
             }
         }
-        gc.setStroke(Color.YELLOW);
-        for (int i = 0; i < bestPath.size() - 1; i++) {
-            gc.strokeLine(
-                    bestPath.get(i).state.getX(), bestPath.get(i).state.getY(),
-                    bestPath.get(i + 1).state.getX(), bestPath.get(i + 1).state.getY());
-        }
-        gc.setStroke(Color.BLACK);
-        for (Town town : graph) {
-            drawTown(town);
+        if (towns.isSelected()) {
+            gc.setStroke(Color.BLACK);
+            for (Town town : graph) {
+                drawTown(town, gc);
+            }
         }
         if (focusTown != null) {
             gc.setFill(Color.RED);
-            drawTown(focusTown);
+            drawTown(focusTown, gc);
         }
         if (startTown != null) {
             gc.setFill(Color.AQUAMARINE);
-            drawTown(startTown);
+            drawTown(startTown, gc);
         }
         if (targetTown != null) {
             gc.setFill(Color.BISQUE);
-            drawTown(targetTown);
+            drawTown(targetTown, gc);
         }
     }
 
@@ -122,7 +146,7 @@ public class FXMLDocumentController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         gc = canvas.getGraphicsContext2D();
         filters[0] = new Filter("Binary File", "*.bin");
-        render();
+        render(gc);
     }
 
     @FXML
@@ -131,7 +155,7 @@ public class FXMLDocumentController implements Initializable {
             if (markedTown != null) {
                 graph.removeVertex(markedTown.hashCode());
                 markedTown = null;
-                render();
+                render(gc);
             }
         }
     }
@@ -148,7 +172,7 @@ public class FXMLDocumentController implements Initializable {
     @FXML
     private void OnClear(ActionEvent event) {
         clearScene();
-        render();
+        render(gc);
     }
 
     @FXML
@@ -170,12 +194,12 @@ public class FXMLDocumentController implements Initializable {
                     && event.getY() < town.getY() + FOCUS_DISTANCE) {
                 markedTown = town;
                 gc.setFill(Color.YELLOW);
-                drawTown(markedTown);
+                drawTown(markedTown, gc);
                 return;
             }
         }
         markedTown = null;
-        render();
+        render(gc);
     }
 
     @FXML
@@ -206,9 +230,9 @@ public class FXMLDocumentController implements Initializable {
 
             focusTown.setX(focusTown.getX() + addendX);
             focusTown.setY(focusTown.getY() + addendY);
-            render();
+            render(gc);
         } else {
-            render();
+            render(gc);
             for (Town town : graph) {
                 Point point = new Point((int) event.getX(), (int) event.getY());
                 if (point.distance(town.getCoordinate()) <= FOCUS_DISTANCE) {
@@ -227,7 +251,7 @@ public class FXMLDocumentController implements Initializable {
                 } else {
                     gc.strokeLine(focusTown.getX(), focusTown.getY(), focusTownSecond.getX(), focusTownSecond.getY());
                     gc.setFill(Color.RED);
-                    drawTown(focusTownSecond);
+                    drawTown(focusTownSecond, gc);
                 }
             } else {
                 gc.setStroke(Color.RED);
@@ -237,7 +261,7 @@ public class FXMLDocumentController implements Initializable {
                     gc.strokeLine(focusTown.getX(), focusTown.getY(), focusTownSecond.getX(), focusTownSecond.getY());
                     gc.setFill(Color.RED);
                     gc.setStroke(Color.BLACK);
-                    drawTown(focusTownSecond);
+                    drawTown(focusTownSecond, gc);
                 }
             }
         }
@@ -248,7 +272,7 @@ public class FXMLDocumentController implements Initializable {
         if (CheckTownMode.isSelected()) {
             if (focusTown != null) {
                 gc.setFill(Color.GREEN);
-                drawTown(focusTown);
+                drawTown(focusTown, gc);
                 LinkedList<Path> paths = graph.findIncidentElements(focusTown.hashCode());
                 for (Path path : paths) {
                     path.length = (int) path.start.getCoordinate().distance(path.target.getCoordinate());
@@ -262,14 +286,14 @@ public class FXMLDocumentController implements Initializable {
                 }
                 focusTown = null;
                 focusTownSecond = null;
-                render();
+                render(gc);
             } else {
                 if (focusTown != null && focusTownSecond != null) {
                     graph.removeEdge(focusTown.hashCode(), focusTownSecond.hashCode());
                 }
                 focusTown = null;
                 focusTownSecond = null;
-                render();
+                render(gc);
             }
         }
     }
@@ -280,19 +304,19 @@ public class FXMLDocumentController implements Initializable {
             if (event.getButton() == MouseButton.MIDDLE) {
                 Town town = new Town("Town_" + (++index), new Point((int) event.getX(), (int) event.getY()));
                 graph.addVertex(town.hashCode(), town);
-                render();
+                render(gc);
             }
         }
         if (event.getButton() == MouseButton.PRIMARY && event.isAltDown()) {
             if (markedTown != null) {
                 startTown = markedTown;
-                render();
+                render(gc);
             }
         }
         if (event.getButton() == MouseButton.SECONDARY && event.isAltDown()) {
             if (markedTown != null) {
                 targetTown = markedTown;
-                render();
+                render(gc);
             }
         }
     }
@@ -351,7 +375,7 @@ public class FXMLDocumentController implements Initializable {
         } catch (IOException | ClassNotFoundException e) {
             System.out.println(e);
         }
-        render();
+        render(gc);
     }
 
     @FXML
@@ -369,6 +393,47 @@ public class FXMLDocumentController implements Initializable {
         for (Node node : list) {
             System.out.println(node);
         }
-        render();
+        render(gc);
+    }
+
+    @FXML
+    private void OnBackground(ActionEvent event) {
+        render(gc);
+    }
+
+    @FXML
+    private void OnTowns(ActionEvent event) {
+        render(gc);
+    }
+
+    @FXML
+    private void Onpaths(ActionEvent event) {
+        render(gc);
+    }
+
+    @FXML
+    private void OnPrint(ActionEvent event) {
+        PrinterJob job = PrinterJob.createPrinterJob();
+
+        if (job != null && job.showPrintDialog(Run.STAGE)) {
+            Printer printer = job.getPrinter();
+            PageLayout pageLayout = printer.createPageLayout(Paper.A4, PageOrientation.PORTRAIT, Printer.MarginType.HARDWARE_MINIMUM);
+
+            Canvas printPage = new Canvas(canvas.getWidth(), canvas.getHeight());
+
+            double scaleX = pageLayout.getPrintableWidth() / printPage.getWidth();
+            double scaleY = pageLayout.getPrintableHeight() / printPage.getHeight();
+
+            Scale scale = new Scale(scaleX, scaleY);
+
+            backgroundColor = Color.WHITE;
+            render(printPage.getGraphicsContext2D());
+            backgroundColor = Color.GRAY;
+            printPage.getTransforms().add(scale);
+
+            if (job.printPage(pageLayout, printPage)) {
+                job.endJob();
+            }
+        }
     }
 }
